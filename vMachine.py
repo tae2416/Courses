@@ -10,20 +10,28 @@ balance = {
     'penny': 10 
 }
 
+# Check string for decimal number
+def isFloat(string):
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+    
+# Verify whether a list of strings contains numbers
+def hasNum(list):
+    for x in list:
+        if x.isdigit():
+            return True
+    return False
+
 while uInput[0] != 'exit' or len(uInput) != 1:
     # Read in user input and keep track of input history
     uInput = input('What do you want to do?: ')
     hist.append(uInput)
     uInput = uInput.split(' ')
     print('')
-
-    # Determine index of quantity in user input
-    i = 0;
-    qInd = 0;
-    for x in uInput:
-        if x.isdigit():
-            qInd = i
-        i += 1
+    print(hasNum(uInput))
 
     match uInput[0]:
         case 'exit' if len(uInput) ==1:
@@ -75,27 +83,47 @@ while uInput[0] != 'exit' or len(uInput) != 1:
             print('{:-^115s}'.format('-'))
             print('{: <30s} | {: <25s} | {: <25s}'.format('exit', 'exit', 'Exit the vending machine'))
             print('{:-^115s}'.format('-'))
-        case ('add' | 'buy'):
+        case ('add' | 'buy') if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
+            print('Level 1')
+            
             match uInput[1]:
-                case 'item':
+                case 'item' if len(uInput) > 2 and uInput[2].isdigit() != True:    
+                    print('Level 2')
+                            
+                    # Determine index of quantity in user input                
+                    qInd = 0;
+                    while uInput[qInd].isdigit() != True and qInd < len(uInput):
+                        qInd += 1
+                    print(qInd)
+                    
                     # Get item name        
                     j = 2
                     itemName = uInput[j]   
-                    while j < qInd:
+                    while j < qInd-1:
                         j += 1
-                        itemName = itemName + ' ' + uInput[j]
-                    
+                    itemName = itemName + ' ' + uInput[j]
+                
+                    print(len(uInput[qInd:len(uInput)]))
+                    print(len(uInput))
+                    print(itemName)
+
                     match uInput[0]:
-                        case 'add':      
+                        case 'add' if (len(uInput[qInd:len(uInput)]) == 2 and \
+                                uInput[qInd+1][0] == '$' and isFloat(uInput[qInd+1][1:len(uInput[qInd+1])])):      
                             # Add item to inventory
                             quant[itemName] = int(uInput[qInd])
-                            price[itemName] = float(uInput[qInd+1][1:len(uInput[qInd+1])])
-                        case 'buy':    
+                            price[itemName] = float(uInput[qInd+1][1:len(uInput[qInd+1])])                            
+                        case 'buy' if (len(uInput[qInd:len(uInput)]) == 5 and \
+                                uInput[qInd+1].isdigit() and uInput[qInd+2].isdigit() and \
+                                uInput[qInd+3].isdigit() and uInput[qInd+4].isdigit()):    
                             # Sell inventory items
                             print('Working on it')    
+                        case other:
+                            # Print error msg
+                            print('Invalid syntax. Type \'help\' for more info.')
                 case other:
                     # Print error msg
-                    print('Invalid command. Type \'help\' for more info.')
+                    print('Invalid syntax. Type \'help\' for more info.')
         case other:
             # Print error msg
             print('Invalid command. Type \'help\' for more info.')
