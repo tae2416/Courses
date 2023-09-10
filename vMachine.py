@@ -10,7 +10,7 @@ balance = {
     'penny': 10 
 }
 
-while uInput[0] != 'exit':
+while uInput[0] != 'exit' or len(uInput) != 1:
     # Read in user input and keep track of input history
     uInput = input('What do you want to do?: ')
     hist.append(uInput)
@@ -26,16 +26,16 @@ while uInput[0] != 'exit':
         i += 1
 
     match uInput[0]:
-        case 'exit':
+        case 'exit' if len(uInput) ==1:
             # Exit program
             print('Completing transaction...')
-        case 'inventory':
+        case 'inventory' if len(uInput) ==1:
             # Print inventory
             print('{: ^25s} | {: ^25s} | {: ^25s}'.format('Item', 'Quantity', 'Price'))
             print('{:-^85s}'.format('-'))
             for x in quant:
                 print('{: ^25s} | {: ^25d} | {: ^25s}'.format(x, quant[x], '$ '+str(price[x])))
-        case 'balance':
+        case 'balance' if len(uInput) ==1:
             # Print balance
             print('{: ^20s} | {: ^15s} | {: ^15s} | {: ^15s} | {: ^15s}'\
                 .format('Dollar', 'Quarter', 'Dime', 'Nickel', 'Penny'))
@@ -43,13 +43,13 @@ while uInput[0] != 'exit':
             print('{: ^20} | {: ^15} | {: ^15} | {: ^15} | {: ^15}'\
                 .format(balance['dollar'], balance['quarter'], balance['dime'], \
                 balance['nickel'], balance['penny']))
-        case 'history':
+        case 'history' if len(uInput) ==1:
             # Print history
             print('Input Log')
             print('{:-^40s}'.format('-'))
             for x in hist:
                 print(x)
-        case 'help':
+        case 'help' if len(uInput) ==1:
             # Print help msg
             print('{: <30s} | {: <25s} | {: <25s}'.format('Command Syntax', 'Example', 'Description'))
             print('{:-^115s}'.format('-'))
