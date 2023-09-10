@@ -1,7 +1,17 @@
+# Print error msg
+def errorMsg(msgType):
+    match msgType:
+        case 'noMoney':
+            print('Error: No money for change in the machine.')
+        case 'noInv':
+            print('Error: Item is not in inventory.')
+        case other:
+            print('Error: Invalid syntax. Type \'help\' for more info.')
+
 # Check string for decimal number
-def isFloat(string):
+def isFloat(strNum):
     try:
-        float(string)
+        float(strNum)
         return True
     except ValueError:
         return False
@@ -17,7 +27,7 @@ def hasNum(list):
 def verifyAdd(command):
     match command[1]:
         case 'item' if len(command) > 2 and command[2].isdigit() != True:    
-            # Command has 'add item' and specifies quantity
+            # Command has 'add item' and specifies 'item name'
                     
             # Determine index of quantity in user input                
             qInd = 0;
@@ -31,7 +41,7 @@ def verifyAdd(command):
                 j += 1
                 itemName = itemName + ' ' + command[j]
 
-            # Verify there is nothing after price
+            # Verify there is nothing after price and ensure price has the right format
             if (len(command[qInd:len(command)]) == 2 and \
                 command[qInd+1][0] == '$' and isFloat(command[qInd+1][1:len(command[qInd+1])])):      
                 # Add item to inventory
@@ -39,16 +49,37 @@ def verifyAdd(command):
                 price[itemName] = float(command[qInd+1][1:len(command[qInd+1])])                            
             else:
                 # Print error msg
-                print('Invalid syntax. Type \'help\' for more info.')
+                errorMsg()
         case other:
             # Print error msg
-            print('Invalid syntax. Type \'help\' for more info.')
+            errorMsg()
+
+# Calculate and return the balance in cents
+def calcBal(bal):
+    return int(bal['dollar'])*100 + int(bal['quarter'])*25 + \
+           int(bal['dime'])*10 + int(bal['nickel'])*5 + \
+           int(bal['penny'])
+
+# Calculate whether change can be made and return in number of dollars,
+# quarters, dimes, nickels, and pennies
+def calcChange(bal, changeC, changeS):
+    changeS['dollar'] = changeC // 100      # Calc number of dollars
+    changeC = changeC % 100                 # Calc remaining change
+    changeS['quarter'] = changeC // 25      # Calc number of quarters
+    changeC = changeC % 25                  # Calc remaining change
+    changeS['dime'] = changeC // 10         # Calc number of dimes
+    changeC = changeC % 10                  # Calc remaining change
+    changeS['nickel'] = changeC // 5        # Calc number of nickels
+    changeC = changeC % 5                   # Calc remaining change
+    changeS['penny'] = changeC // 1         # Calc number of pennies
+
+    return changeS
 
 # Verify that 'buy item' command has correct syntax and execute if correct
-def verifyBuy(command):
+def verifyBuy(command, bal, invQ, invP):
     match command[1]:
         case 'item' if len(command) > 2 and command[2].isdigit() != True:    
-            # Command has 'buy item' and specifies number of dollars
+            # Command has 'buy item' and specifies 'item name'
             print('Level 2')
                     
             # Determine index of quantity in user input                
@@ -68,23 +99,56 @@ def verifyBuy(command):
             print(len(command))
             print(itemName)
 
-            # Verify there is nothing after price
-            if (len(command[qInd:len(command)]) == 2 and \
-                command[qInd+1][0] == '$' and isFloat(command[qInd+1][1:len(command[qInd+1])])):      
-                # Add item to inventory
-                quant[itemName] = int(command[qInd])
-                price[itemName] = float(command[qInd+1][1:len(command[qInd+1])])                            
-                #case 'buy' if (len(command[qInd:len(command)]) == 5 and \
-                 #       command[qInd+1].isdigit() and command[qInd+2].isdigit() and \
-                  #      command[qInd+3].isdigit() and command[qInd+4].isdigit()):    
-                   # # Sell inventory items
-                    #print('Working on it')    
+            # Verify that the item exists
+            if itemName in invQ and invQ[itemName] > 0:            
+                # Verify there is nothing after specification of pennies and verify 
+                # that specified quantities are integers            
+                if (len(command[qInd:len(command)]) == 5 and \
+                    command[qInd+1].isdigit() and command[qInd+2].isdigit() and \
+                    command[qInd+3].isdigit() and command[qInd+4].isdigit()):    
+                    # Sell inventory items
+                    print('Working on it')    
+                    # Calculate payment in cents
+                    payC = int(command[qInd])*100 + int(command[qInd+1])*25 + \
+                        int(command[qInd+2])*10 + int(command[qInd+3])*5 + \
+                        int(command[qInd+4])
+                    print(payC)
+
+                    costC = int(invP[itemName]*100)
+                    
+                    # Check balance is greather than change required
+                    changeC = payC - costC       # Calculate change in cents
+                    print(changeC)
+
+                    changeS = {     # Change in terms of dollars, quarters, dimes, nickels, and pennies
+                        'dollar': 0,
+                        'quarter': 0, 
+                        'dime': 0, 
+                        'nickel': 0,
+                        'penny': 0 
+                    }
+                    balC = calcBal(bal)     # Current balance in machine
+                    print(calcBal(bal))
+
+                    if balC > changeC:
+                        changeS = calcChange(balance, changeC, changeS)      # Calc denomination quantities
+                        
+                        print(changeS['dollar'])
+                        print(changeS['quarter'])
+                        print(changeS['dime'])
+                        print(changeS['nickel'])
+                        print(changeS['penny'])
+                    else:
+                        errorMsg('noMoney')
+                else:
+                    # Print error msg
+                    errorMsg()
             else:
                 # Print error msg
-                print('Invalid syntax. Type \'help\' for more info.')
+                errorMsg('noInv')
         case other:
             # Print error msg
-            print('Invalid syntax. Type \'help\' for more info.')
+            errorMsg()
 
 
 ##### Main program
@@ -163,14 +227,16 @@ while uInput[0] != 'exit' or len(uInput) != 1:
             print('{:-^115s}'.format('-'))
             print('{: <30s} | {: <25s} | {: <25s}'.format('exit', 'exit', 'Exit the vending machine'))
             print('{:-^115s}'.format('-'))
-        case ('add' | 'buy') if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
-            # Verify command format
+        case 'add' if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
+            # Verify command format and execute
             verifyAdd(uInput)
+        case 'buy' if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
+            # Verify command format and execute
+            verifyBuy(uInput, balance, quant, price)
         case other:
             # Print error msg
-            print('Invalid command. Type \'help\' for more info.')
+            errorMsg()
             
-
     print(quant)
     print(price)
     print(hist)
