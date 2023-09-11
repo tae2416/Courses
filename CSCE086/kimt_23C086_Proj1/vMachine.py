@@ -1,6 +1,8 @@
 # Print error msg
 def errorMsg(msgType):
     match msgType:
+        case 'notEnough':
+            print('Error: You didn\'t put in enough money.')
         case 'noMoney':
             print('Error: No money for change in the machine.')
         case 'noInv':
@@ -24,7 +26,7 @@ def hasNum(list):
     return False
 
 # Verify that 'add item' command has correct syntax and execute if correct
-def verifyAdd(command):
+def verifyAdd(command, invQ, invP):
     match command[1]:
         case 'item' if len(command) > 2 and command[2].isdigit() != True:    
             # Command has 'add item' and specifies 'item name'
@@ -45,8 +47,11 @@ def verifyAdd(command):
             if (len(command[qInd:len(command)]) == 2 and \
                 command[qInd+1][0] == '$' and isFloat(command[qInd+1][1:len(command[qInd+1])])):      
                 # Add item to inventory
-                quant[itemName] = int(command[qInd])
-                price[itemName] = float(command[qInd+1][1:len(command[qInd+1])])                            
+                invQ[itemName] = int(command[qInd])
+                invP[itemName] = float(command[qInd+1][1:len(command[qInd+1])])     
+
+                # Print inventory to screen
+                printInv(invQ, invP)                       
             else:
                 # Print error msg
                 errorMsg('')
@@ -84,16 +89,13 @@ def updateInv(itemName, invQ):
 
 def updateBal(changeS, bal, inOut):
     # Update balance to reflect change given to customer
-    print(bal.keys())
     match inOut:
         case 'in':    
             for x in bal.keys():
                 bal[x] = bal[x] + changeS[x]
-                print(bal[x] + changeS[x])
         case 'out':
             for x in bal.keys():
                 bal[x] = bal[x] - changeS[x]
-                print(bal[x] - changeS[x])
     return bal
 
 # Print denomination to screen
@@ -106,6 +108,15 @@ def printDenom(bal):
         .format(bal['dollar'], bal['quarter'], bal['dime'], \
         bal['nickel'], bal['penny']))    
     print('{:-^95s}'.format('-'))
+    print('')
+
+# Print inventory to screen
+def printInv(invQ, invP):
+    print('{:-^85s}'.format('-'))
+    print('{: ^25s} | {: ^25s} | {: ^25s}'.format('Item', 'Quantity', 'Price'))
+    print('{:-^85s}'.format('-'))
+    for x in invQ:
+        print('{: ^25s} | {: ^25d} | {: ^25s}'.format(x, invQ[x], '$ '+str(invP[x])))
 
 # Verify that 'buy item' command has correct syntax and execute if correct
 # Returns updated balance and quantities (bal, invQ)
@@ -148,29 +159,30 @@ def verifyBuy(command, bal, invQ, invP):
                     payC = calcCurr(paiD)
                     costC = int(invP[itemName]*100)
 
-                    # Check balance is greather than change required
+                    # Verify that customer paid enough money
                     changeC = payC - costC      # Calculate change in cents
-                    balC = calcCurr(bal)        # Current balance in machine
+                    if changeC >= 0:                           
+                        balC = calcCurr(bal)        # Current balance in machine
 
-                    # If there is enough in the balance update inventory and balance to reflect purchase
-                    if balC > changeC:
-                        changeS = getDenom(changeC)      # Calc denomination quantities
-                        
-                        invQ = updateInv(itemName, invQ)
-                        bal = updateBal(changeS, bal, 'out')
-                        
-                        # Print output
-                        print('{:-^40s}'.format('-'))
-                        print(f'${payC/100} paid for {itemName} (cost = ${costC})')                  
-                        print('{:-^40s}'.format('-'))
-                        print(f'Change given is:  ${changeC}')
-                        printDenom(changeS)
-                        print(f'Vending Machine balance is:  ${calcCurr(balance)/100}')
-                        printDenom(balance)
-
-                        return bal, invQ
+                        # If there is enough in the balance update inventory and balance to reflect purchase
+                        if balC > changeC:
+                            changeS = getDenom(changeC)      # Calc denomination quantities
+                            
+                            invQ = updateInv(itemName, invQ)
+                            bal = updateBal(changeS, bal, 'out')
+                            
+                            # Print output
+                            print('{:-^40s}'.format('-'))
+                            print(f'${payC/100} paid for {itemName} (cost = ${costC/100})')                  
+                            print(f'Change given is:  ${changeC/100}')
+                            printDenom(changeS)
+                            print(f'Vending Machine balance is:  ${calcCurr(bal)/100}')
+                            printDenom(bal)
+                        else:
+                            errorMsg('noMoney')
                     else:
-                        errorMsg('noMoney')
+                        # Print error msg
+                        errorMsg('notEnough')
                 else:
                     # Print error msg
                     errorMsg('')
@@ -180,6 +192,8 @@ def verifyBuy(command, bal, invQ, invP):
         case other:
             # Print error msg
             errorMsg('')
+
+    return bal, invQ
 
 
 ##### Main program
@@ -211,11 +225,7 @@ while uInput[0] != 'exit' or len(uInput) != 1:
             print('{:-^40s}'.format('-'))
         case 'inventory' if len(uInput) ==1:
             # Print inventory
-            print('{:-^85s}'.format('-'))
-            print('{: ^25s} | {: ^25s} | {: ^25s}'.format('Item', 'Quantity', 'Price'))
-            print('{:-^85s}'.format('-'))
-            for x in quant:
-                print('{: ^25s} | {: ^25d} | {: ^25s}'.format(x, quant[x], '$ '+str(price[x])))
+            printInv(quant, price)
         case 'balance' if len(uInput) ==1:
             # Print balance
             printDenom(balance)
@@ -255,7 +265,7 @@ while uInput[0] != 'exit' or len(uInput) != 1:
             print('{:-^115s}'.format('-'))
         case 'add' if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
             # Verify command format and execute
-            verifyAdd(uInput)
+            verifyAdd(uInput, quant, price)
         case 'buy' if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
             # Verify command format and execute
             balance, quant = verifyBuy(uInput, balance, quant, price)
