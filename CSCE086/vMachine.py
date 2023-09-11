@@ -165,6 +165,8 @@ def verifyBuy(command, bal, invQ, invP):
                         print('{:-^40s}'.format('-'))
                         print(f'Change given is:  ${changeC}')
                         printDenom(changeS)
+                        print(f'Vending Machine balance is:  ${calcCurr(balance)/100}')
+                        printDenom(balance)
 
                         return bal, invQ
                     else:
@@ -261,10 +263,6 @@ while uInput[0] != 'exit' or len(uInput) != 1:
             # Print error msg
             errorMsg('')
             
-    print(quant)
-    print(price)
-    print(hist)
-    print(len(uInput))
     for k in range(3):
         print('')
     
