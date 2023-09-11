@@ -10,6 +10,14 @@ def errorMsg(msgType):
         case other:
             print('Error: Invalid syntax. Type \'help\' for more info.')
 
+# Remove empty spaces from input command
+def rmEmpty(command):
+    while command[0] == '':
+        command = command[1:]
+    while command[-1] == '': 
+        command = command[:-1]
+    return command
+
 # Check string for decimal number
 def isFloat(strNum):
     try:
@@ -58,6 +66,7 @@ def verifyAdd(command, invQ, invP):
         case other:
             # Print error msg
             errorMsg('')
+    return invQ, invP
 
 # Calculate and return the currency value in cents
 def calcCurr(bal):
@@ -67,18 +76,34 @@ def calcCurr(bal):
 
 # Calculate whether change can be made and return in number of dollars,
 # quarters, dimes, nickels, and pennies
-def getDenom(changeC):
+def getDenom(changeC, bal):
     deNom = {}
 
-    deNom['dollar'] = changeC // 100      # Calc number of dollars
-    changeC = changeC % 100                 # Calc remaining change
-    deNom['quarter'] = changeC // 25      # Calc number of quarters
-    changeC = changeC % 25                  # Calc remaining change
-    deNom['dime'] = changeC // 10         # Calc number of dimes
-    changeC = changeC % 10                  # Calc remaining change
-    deNom['nickel'] = changeC // 5        # Calc number of nickels
-    changeC = changeC % 5                   # Calc remaining change
-    deNom['penny'] = changeC // 1         # Calc number of pennies
+    deNom['dollar'] = changeC // 100         # Calc number of dollars
+    changeC = changeC % 100                  # Calc remaining change
+    if deNom['dollar'] > bal['dollar']:
+        changeC += (deNom['dollar'] - bal['dollar']) * 100
+        deNom['dollar'] = bal['dollar']
+            
+    deNom['quarter'] = changeC // 25         # Calc number of quarters
+    changeC = changeC % 25                   # Calc remaining change
+    if deNom['quarter'] > bal['quarter']:
+        changeC += (deNom['quarter'] - bal['quarter']) * 25
+        deNom['quarter'] = bal['quarter']
+
+    deNom['dime'] = changeC // 10            # Calc number of dimes
+    changeC = changeC % 10                   # Calc remaining change
+    if deNom['dime'] > bal['dime']:
+        changeC += (deNom['dime'] - bal['dime']) * 10
+        deNom['dime'] = bal['dime']
+    
+    deNom['nickel'] = changeC // 5           # Calc number of nickels
+    changeC = changeC % 5                    # Calc remaining change
+    if deNom['nickel'] > bal['nickel']:
+        changeC += (deNom['nickel'] - bal['nickel']) * 5
+        deNom['nickel'] = bal['nickel']
+
+    deNom['penny'] = changeC                 # Calc number of pennies
 
     return deNom
 
@@ -154,7 +179,7 @@ def verifyBuy(command, bal, invQ, invP):
                         'penny': int(command[qInd+4]), 
                     }
                     bal = updateBal(paiD, bal, 'in')
-                    
+                                        
                     # Calculate payment and cost of item in cents
                     payC = calcCurr(paiD)
                     costC = int(invP[itemName]*100)
@@ -166,9 +191,9 @@ def verifyBuy(command, bal, invQ, invP):
 
                         # If there is enough in the balance update inventory and balance to reflect purchase
                         if balC > changeC:
-                            changeS = getDenom(changeC)      # Calc denomination quantities
+                            changeS = getDenom(changeC, bal)      # Calc denomination quantities
                             
-                            invQ = updateInv(itemName, invQ)
+                            invQ = updateInv(itemName, invQ)                            
                             bal = updateBal(changeS, bal, 'out')
                             
                             # Print output
@@ -181,8 +206,9 @@ def verifyBuy(command, bal, invQ, invP):
                         else:
                             errorMsg('noMoney')
                     else:
-                        # Print error msg
+                        # Print error msg and return money
                         errorMsg('notEnough')
+                        bal = updateBal(paiD, bal, 'out')
                 else:
                     # Print error msg
                     errorMsg('')
@@ -207,14 +233,20 @@ balance = {         # Initial change balance in vending machine
     'quarter': 10, 
     'dime': 10, 
     'nickel': 10,
-    'penny': 10 
+    'penny': 100 
 }
+
+print('{:-^40s}'.format('-'))
+print('CSCE086 Vending Machine')
+print('{:-^40s}'.format('-'))
+print('')
 
 while uInput[0] != 'exit' or len(uInput) != 1:
     # Read in user input and keep track of input history
-    uInput = input('What do you want?: ')
+    uInput = input('What do you want?: ')    
     hist.append(uInput)
     uInput = uInput.split(' ')
+    uInput = rmEmpty(uInput)
     print('')
 
     match uInput[0]:
@@ -228,6 +260,7 @@ while uInput[0] != 'exit' or len(uInput) != 1:
             printInv(quant, price)
         case 'balance' if len(uInput) ==1:
             # Print balance
+            print(f'Vending Machine balance is:  ${calcCurr(balance)/100}')
             printDenom(balance)
         case 'history' if len(uInput) ==1:
             # Print history
@@ -239,7 +272,9 @@ while uInput[0] != 'exit' or len(uInput) != 1:
         case 'help' if len(uInput) ==1:
             # Print help msg
             print('{:-^115s}'.format('-'))
+            print('{: <30s} | {: <25s} | {: <55s}'.format('', '', ''))
             print('{: <30s} | {: <25s} | {: <25s}'.format('Command Syntax', 'Example', 'Description'))
+            print('{: <30s} | {: <25s} | {: <55s}'.format('', '', ''))
             print('{:-^115s}'.format('-'))
             print('{: <30s} | {: <25s} | {: <25s}'.format('balance', 'balance', 'Shows the balance'))
             print('{:-^115s}'.format('-'))
@@ -265,7 +300,7 @@ while uInput[0] != 'exit' or len(uInput) != 1:
             print('{:-^115s}'.format('-'))
         case 'add' if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
             # Verify command format and execute
-            verifyAdd(uInput, quant, price)
+            quant, price = verifyAdd(uInput, quant, price)
         case 'buy' if len(uInput) > 1 and hasNum(uInput):     # Verify that command includes numbers
             # Verify command format and execute
             balance, quant = verifyBuy(uInput, balance, quant, price)
