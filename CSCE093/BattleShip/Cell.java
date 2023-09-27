@@ -3,6 +3,7 @@ package BattleShip;
 public class Cell
 {
 	protected boolean struckByMissle = false;
+	protected boolean shotAt = false;
 	protected Ship ship = null;
 	
 	public Cell()
@@ -11,6 +12,7 @@ public class Cell
 	
 	public boolean hasBeenStruckByMissile()
 	{
+		return struckByMissle;
 	}
 	
 	public void hasBeenStruckByMissile( boolean wasStruck )

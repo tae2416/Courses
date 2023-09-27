@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 abstract public class Ship
 {
-	protected ArrayList< Cell > position = null;
+	protected ArrayList< Cell > position = new ArrayList<Cell>();
 	protected String name = "Unnamed";
 	
 	public Ship( String name )
@@ -12,9 +12,9 @@ abstract public class Ship
 		this.name = name;
 	}
 	
-	public void setPosition( ArrayList< Cell > position )
+	public void setPosition( Cell coords )
 	{
-		this.position = position;
+		this.position.add(coords);
 	}
 	
 	public abstract char drawShipStatusAtCell( boolean isDamaged );
@@ -25,7 +25,7 @@ abstract public class Ship
 	{
 		for( Cell c : this.position )
 			if( ! c.hasBeenStruckByMissile() )
-				return true;
+		 		return true;
 		return false;
 	}
 	
