@@ -1,7 +1,7 @@
 import java.util.Arrays;
 import java.util.Scanner;
 
-class CSCE586_HW2
+class CSCE586_HW1
 {
     public static int euclidGCD(int m, int n) {
         int count = 0;
