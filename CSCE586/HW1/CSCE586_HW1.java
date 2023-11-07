@@ -197,5 +197,6 @@ class CSCE586_HW1
                 System.out.println("Invalid problem #.");
                 break;
         }   
+        scanner.close();
     }
 }
